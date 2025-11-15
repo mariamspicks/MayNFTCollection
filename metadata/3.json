@@ -1,0 +1,11 @@
+{
+  "name": "May NFT Collection #3",
+  "description": "A unique NFT from our collection",
+  "image": "ipfs://bafybeifuccmwzkpcfwojwnirosdf27uamnbnwjjaujrn4cg2s6stjuhezm/3.png",
+  "attributes": [
+    {
+      "trait_type": "Background colour",
+      "value": "pink"
+    }
+  ]
+}

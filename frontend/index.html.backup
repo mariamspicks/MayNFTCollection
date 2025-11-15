@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaCoin NFT Collection - Mint</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            color: #333;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .wallet-section {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .wallet-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .wallet-address {
+            color: #1976d2;
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        .mint-section {
+            margin-bottom: 20px;
+        }
+
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .quantity-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quantity-btn:hover:not(:disabled) {
+            background: #5568d3;
+            transform: scale(1.1);
+        }
+
+        .quantity-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .quantity-display {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .total-cost {
+            text-align: center;
+            font-size: 1.2em;
+            color: #666;
+            margin: 20px 0;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .your-nfts {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .nft-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .nft-token {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🪙 MetaCoin Collection</h1>
+        <p class="subtitle">Mint unique digital coins from our exclusive collection</p>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-label">Total Supply</div>
+                <div class="info-value" id="currentSupply">0 / 0</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Mint Price</div>
+                <div class="info-value" id="mintPrice">0 ETH</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Max Per Wallet</div>
+                <div class="info-value" id="maxPerWallet">0</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">You Minted</div>
+                <div class="info-value" id="userMinted">0</div>
+            </div>
+        </div>
+
+        <div class="wallet-section">
+            <div class="wallet-status">
+                <span>Wallet: </span>
+                <span class="wallet-address" id="walletAddress">Not connected</span>
+            </div>
+        </div>
+
+        <div class="mint-section">
+            <h3 style="text-align: center; margin-bottom: 20px;">Select Quantity</h3>
+            <div class="quantity-selector">
+                <button class="quantity-btn" id="decreaseBtn" onclick="changeQuantity(-1)">−</button>
+                <div class="quantity-display" id="quantity">1</div>
+                <button class="quantity-btn" id="increaseBtn" onclick="changeQuantity(1)">+</button>
+            </div>
+            <div class="total-cost">
+                Total: <strong id="totalCost">0 ETH</strong>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" id="connectBtn" onclick="connectWallet()">
+            Connect Wallet
+        </button>
+        <button class="btn btn-primary hidden" id="mintBtn" onclick="mintNFT()">
+            Mint NFT
+        </button>
+
+        <div id="statusMessage"></div>
+
+        <div class="your-nfts hidden" id="yourNftsSection">
+            <h3>Your NFTs</h3>
+            <div class="nft-grid" id="nftGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        // REPLACE THIS WITH YOUR DEPLOYED CONTRACT ADDRESS
+        const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+        
+        // Contract ABI (only necessary functions)
+        const CONTRACT_ABI = [
+            "function mint() external payable",
+            "function mintBatch(uint256 quantity) external payable",
+            "function maxSupply() view returns (uint256)",
+            "function mintPrice() view returns (uint256)",
+            "function maxPerWallet() view returns (uint256)",
+            "function getCurrentSupply() view returns (uint256)",
+            "function mintedPerWallet(address) view returns (uint256)",
+            "function tokensOfOwner(address owner) view returns (uint256[])",
+            "function balanceOf(address owner) view returns (uint256)"
+        ];
+
+        let provider, signer, contract;
+        let currentQuantity = 1;
+        let maxPerWallet = 5;
+        let mintPriceWei = 0;
+        let userMintedCount = 0;
+
+        async function connectWallet() {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    showStatus('Please install MetaMask!', 'error');
+                    return;
+                }
+
+                showStatus('Connecting wallet...', 'info');
+                
+                provider = new ethers.BrowserProvider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                signer = await provider.getSigner();
+                const address = await signer.getAddress();
+                
+                contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+                
+                document.getElementById('walletAddress').textContent = 
+                    address.slice(0, 6) + '...' + address.slice(-4);
+                
+                document.getElementById('connectBtn').classList.add('hidden');
+                document.getElementById('mintBtn').classList.remove('hidden');
+                
+                await loadContractInfo();
+                await loadUserNFTs();
+                
+                showStatus('Wallet connected successfully!', 'success');
+            } catch (error) {
+                console.error(error);
+                showStatus('Failed to connect wallet: ' + error.message, 'error');
+            }
+        }
+
+        async function loadContractInfo() {
+            try {
+                const [maxSupply, currentSupply, mintPrice, maxWallet, userMinted] = await Promise.all([
+                    contract.maxSupply(),
+                    contract.getCurrentSupply(),
+                    contract.mintPrice(),
+                    contract.maxPerWallet(),
+                    contract.mintedPerWallet(await signer.getAddress())
+                ]);
+
+                maxPerWallet = Number(maxWallet);
+                mintPriceWei = mintPrice;
+                userMintedCount = Number(userMinted);
+
+                document.getElementById('currentSupply').textContent = 
+                    `${currentSupply} / ${maxSupply}`;
+                document.getElementById('mintPrice').textContent = 
+                    ethers.formatEther(mintPrice) + ' ETH';
+                document.getElementById('maxPerWallet').textContent = maxPerWallet;
+                document.getElementById('userMinted').textContent = userMinted;
+
+                updateTotalCost();
+                updateQuantityButtons();
+            } catch (error) {
+                console.error('Error loading contract info:', error);
+                showStatus('Error loading contract information', 'error');
+            }
+        }
+
+        function changeQuantity(delta) {
+            const newQuantity = currentQuantity + delta;
+            const remaining = maxPerWallet - userMintedCount;
+            
+            if (newQuantity >= 1 && newQuantity <= remaining) {
+                currentQuantity = newQuantity;
+                document.getElementById('quantity').textContent = currentQuantity;
+                updateTotalCost();
+                updateQuantityButtons();
+            }
+        }
+
+        function updateQuantityButtons() {
+            const remaining = maxPerWallet - userMintedCount;
+            document.getElementById('decreaseBtn').disabled = currentQuantity <= 1;
+            document.getElementById('increaseBtn').disabled = currentQuantity >= remaining;
+        }
+
+        function updateTotalCost() {
+            const totalWei = mintPriceWei * BigInt(currentQuantity);
+            document.getElementById('totalCost').textContent = 
+                ethers.formatEther(totalWei) + ' ETH';
+        }
+
+        async function mintNFT() {
+            try {
+                const mintBtn = document.getElementById('mintBtn');
+                mintBtn.disabled = true;
+                mintBtn.innerHTML = '<span class="loading"></span> Minting...';
+                
+                showStatus('Preparing transaction...', 'info');
+
+                const totalCost = mintPriceWei * BigInt(currentQuantity);
+                
+                let tx;
+                if (currentQuantity === 1) {
+                    tx = await contract.mint({ value: totalCost });
+                } else {
+                    tx = await contract.mintBatch(currentQuantity, { value: totalCost });
+                }
+                
+                showStatus('Transaction submitted! Waiting for confirmation...', 'info');
+                
+                await tx.wait();
+                
+                showStatus(`Successfully minted ${currentQuantity} NFT${currentQuantity > 1 ? 's' : ''}! 🎉`, 'success');
+                
+                // Reset quantity
+                currentQuantity = 1;
+                document.getElementById('quantity').textContent = currentQuantity;
+                
+                // Reload info and NFTs
+                await loadContractInfo();
+                await loadUserNFTs();
+                
+                mintBtn.disabled = false;
+                mintBtn.textContent = 'Mint NFT';
+            } catch (error) {
+                console.error(error);
+                let errorMessage = 'Minting failed: ';
+                
+                if (error.code === 'ACTION_REJECTED') {
+                    errorMessage += 'Transaction cancelled';
+                } else if (error.message.includes('insufficient funds')) {
+                    errorMessage += 'Insufficient funds';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                showStatus(errorMessage, 'error');
+                
+                const mintBtn = document.getElementById('mintBtn');
+                mintBtn.disabled = false;
+                mintBtn.textContent = 'Mint NFT';
+            }
+        }
+
+        async function loadUserNFTs() {
+            try {
+                const address = await signer.getAddress();
+                const tokens = await contract.tokensOfOwner(address);
+                
+                if (tokens.length > 0) {
+                    document.getElementById('yourNftsSection').classList.remove('hidden');
+                    const nftGrid = document.getElementById('nftGrid');
+                    nftGrid.innerHTML = '';
+                    
+                    tokens.forEach(tokenId => {
+                        const nftElement = document.createElement('div');
+                        nftElement.className = 'nft-token';
+                        nftElement.textContent = `#${tokenId}`;
+                        nftGrid.appendChild(nftElement);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading NFTs:', error);
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message status-${type}`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.textContent = '';
+                    statusDiv.className = '';
+                }, 5000);
+            }
+        }
+
+        // Update quantity buttons on load
+        updateQuantityButtons();
+    </script>
+</body>
+</html>
